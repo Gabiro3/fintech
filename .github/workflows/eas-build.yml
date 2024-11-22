@@ -1,0 +1,51 @@
+name: Expo EAS Android Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18" # Use the Node.js version compatible with your project
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Install EAS CLI
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      # Log in to Expo (use secrets for secure login)
+      - name: Authenticate with Expo
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas login --token $EXPO_TOKEN
+
+      # Configure EAS Build (creates eas.json if not already present)
+      - name: Configure EAS Build
+        run: eas build:configure
+
+      # Trigger Android APK build
+      - name: Build APK
+        run: eas build --platform android
+
+      # Upload artifacts (optional, if you want to save the APK)
+      - name: Upload APK to Artifacts
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: expo-android-apk
+          path: dist/*.apk
